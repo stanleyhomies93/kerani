@@ -1,0 +1,1038 @@
+<!DOCTYPE html>
+<html lang="ms">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, user-scalable=no">
+<meta name="apple-mobile-web-app-capable" content="yes">
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+<meta name="theme-color" content="#F4F4F3" media="(prefers-color-scheme: light)">
+<meta name="theme-color" content="#131516" media="(prefers-color-scheme: dark)">
+<title>Kerani</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Familjen+Grotesk:wght@400;500;600;700&family=Instrument+Sans:wght@400;500;600;700&family=IBM+Plex+Mono:wght@400;500&display=swap">
+<style>
+:root{
+  --ink:#0C0D0E;--ink-2:#2E3134;--ink-3:#6C7075;--ink-4:#A9ADB1;
+  --line:#DCDEDF;--line-2:#EDEEEE;--paper:#F4F4F3;--card:#FFFFFF;--sunk:#F0F0EF;
+  --shadow:0 1px 2px rgba(12,13,14,.06),0 12px 34px rgba(12,13,14,.08);
+  --display:"Familjen Grotesk",ui-sans-serif,system-ui,sans-serif;
+  --body:"Instrument Sans",ui-sans-serif,system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,SFMono-Regular,monospace;
+  --safe-top:env(safe-area-inset-top,0px);
+  --safe-bot:env(safe-area-inset-bottom,0px);
+}
+@media(prefers-color-scheme:dark){
+  :root{
+    --ink:#F2F2F1;--ink-2:#D3D5D6;--ink-3:#9FA3A6;--ink-4:#6E7376;
+    --line:#33373A;--line-2:#26292B;--paper:#131516;--card:#1B1E1F;--sunk:#222527;
+    --shadow:0 1px 2px rgba(0,0,0,.5),0 14px 38px rgba(0,0,0,.45);
+  }
+}
+
+*{box-sizing:border-box;margin:0;padding:0}
+html,body{height:100%;overflow:hidden}
+body{
+  background:var(--paper);color:var(--ink);
+  font-family:var(--body);font-size:15px;line-height:1.55;
+  -webkit-font-smoothing:antialiased;
+  -webkit-tap-highlight-color:transparent;
+}
+h1,h2,h3,h4{font-family:var(--display);text-wrap:balance;line-height:1.12}
+a{color:inherit}
+button{font:inherit;color:inherit;background:none;border:none;cursor:pointer;-webkit-appearance:none}
+
+/* ── App Shell ── */
+.app{
+  display:flex;flex-direction:column;
+  height:100%;height:100dvh;
+  max-width:430px;margin:0 auto;
+  position:relative;overflow:hidden;
+}
+.statusbar{
+  flex:0 0 auto;
+  padding:var(--safe-top) 20px 0;
+  height:calc(44px + var(--safe-top));
+  display:flex;align-items:center;justify-content:space-between;
+  font-family:var(--mono);font-size:10.5px;color:var(--ink-3);
+  background:var(--paper);z-index:10;
+}
+.stage{flex:1 1 auto;position:relative;overflow:hidden}
+.screen{
+  position:absolute;inset:0;
+  overflow-y:auto;overflow-x:hidden;
+  -webkit-overflow-scrolling:touch;
+  padding:6px 20px 24px;
+  display:flex;flex-direction:column;gap:14px;
+  scrollbar-width:none;
+}
+.screen::-webkit-scrollbar{display:none}
+.screen[hidden]{display:none!important}
+
+/* Tab bar */
+.tabbar{
+  flex:0 0 auto;
+  padding:0 6px calc(6px + var(--safe-bot));
+  height:calc(58px + var(--safe-bot));
+  border-top:1px solid var(--line-2);
+  display:grid;grid-template-columns:repeat(5,1fr);
+  align-items:start;background:var(--paper);z-index:10;
+}
+.tabbar[hidden]{display:none!important}
+.tab{
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+  font-size:9.5px;color:var(--ink-4);padding-top:10px;
+  font-family:var(--mono);letter-spacing:.03em;
+  min-height:44px;
+}
+.tab i{width:16px;height:16px;border:1.4px solid currentColor;border-radius:4px;display:block}
+.tab.mid i{border-radius:50%;background:var(--ink);border-color:var(--ink)}
+.tab[aria-current="true"]{color:var(--ink);font-weight:500}
+.tab[aria-current="true"] i{background:var(--ink);border-color:var(--ink)}
+.tab.mid[aria-current="true"] i{background:var(--ink)}
+
+/* ── Language toggle (in-app, top-right) ── */
+.lang-toggle{
+  position:fixed;top:calc(6px + var(--safe-top));right:12px;z-index:20;
+  display:flex;border:1px solid var(--line);border-radius:999px;padding:2px;background:var(--card);
+}
+.langbtn{
+  font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;
+  padding:3px 9px;border-radius:999px;color:var(--ink-4);line-height:1;
+}
+.langbtn[aria-pressed="true"]{background:var(--ink);color:var(--paper)}
+
+/* ── UI Kit ── */
+.s-title{font-family:var(--display);font-size:21px;font-weight:700;letter-spacing:-.02em;line-height:1.1}
+.s-sub{font-size:12.5px;color:var(--ink-3);line-height:1.45}
+.s-kicker{font-family:var(--mono);font-size:9.5px;letter-spacing:.14em;text-transform:uppercase;color:var(--ink-4)}
+.sec-h{display:flex;align-items:baseline;justify-content:space-between;gap:8px;margin-top:2px}
+.sec-h span{font-family:var(--mono);font-size:9.5px;letter-spacing:.12em;text-transform:uppercase;color:var(--ink-4)}
+.sec-h strong{font-family:var(--display);font-size:13.5px;font-weight:600}
+
+.card{border:1px solid var(--line);border-radius:14px;padding:12px 13px;display:flex;flex-direction:column;gap:7px;background:var(--card)}
+.card.flat{border:none;background:var(--sunk)}
+.card.lift{box-shadow:0 1px 0 var(--line-2),0 8px 20px rgba(12,13,14,.06)}
+.row{display:flex;align-items:flex-start;justify-content:space-between;gap:10px}
+.ttl{font-size:13.5px;font-weight:600;line-height:1.3}
+.sub{font-size:11.5px;color:var(--ink-3);line-height:1.4}
+.amt{font-family:var(--mono);font-size:13px;font-weight:500;white-space:nowrap;font-variant-numeric:tabular-nums}
+
+.chip{display:inline-flex;align-items:center;gap:5px;font-family:var(--mono);font-size:9.5px;letter-spacing:.06em;text-transform:uppercase;padding:3px 7px;border-radius:999px;border:1px solid var(--line);color:var(--ink-3);white-space:nowrap}
+.chip.solid{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip.late{border-color:var(--ink);color:var(--ink);background:repeating-linear-gradient(135deg,transparent 0 3px,var(--line) 3px 4px)}
+.chip.done{color:var(--ink-4)}
+.chip.done::before{content:"✓";font-size:10px}
+.chiprow{display:flex;flex-wrap:wrap;gap:6px}
+.chip[data-on="1"]{background:var(--ink);color:var(--paper);border-color:var(--ink)}
+.chip[data-on="0"]{color:var(--ink-3)}
+
+.btn{display:block;width:100%;text-align:center;border-radius:11px;padding:11px;font-size:13.5px;font-weight:600;border:1px solid var(--ink);background:var(--ink);color:var(--paper);min-height:44px}
+.btn.ghost{background:transparent;color:var(--ink)}
+.btn.quiet{background:transparent;color:var(--ink-3);border-color:var(--line)}
+.btn:active{opacity:.7}
+.btnrow{display:flex;gap:8px}
+.btnrow .btn{flex:1}
+
+.opt{display:flex;align-items:center;gap:10px;border:1px solid var(--line);border-radius:12px;padding:11px 12px;width:100%;text-align:left;min-height:44px}
+.opt .mark{flex:0 0 auto;width:16px;height:16px;border-radius:50%;border:1.5px solid var(--ink-4)}
+.opt[data-on="1"]{border-color:var(--ink)}
+.opt[data-on="1"] .mark{background:var(--ink);border-color:var(--ink);box-shadow:inset 0 0 0 3px var(--card)}
+.opt .ttl{font-size:13px}
+
+.toggle{width:34px;height:20px;border-radius:999px;border:1px solid var(--line);position:relative;flex:0 0 auto}
+.toggle::after{content:"";position:absolute;top:2px;left:2px;width:14px;height:14px;border-radius:50%;background:var(--ink-4);transition:all .15s}
+.toggle[data-on="1"]{background:var(--ink);border-color:var(--ink)}
+.toggle[data-on="1"]::after{left:auto;right:2px;background:var(--card)}
+
+.divider{height:1px;background:var(--line-2)}
+.steps{display:flex;flex-direction:column;gap:0;margin:2px 0}
+.step{display:grid;grid-template-columns:16px 1fr;gap:9px;padding:5px 0;font-size:11.5px;color:var(--ink-3);position:relative}
+.step b{color:var(--ink);font-weight:600;font-size:12px;display:block}
+.step .dot{width:9px;height:9px;border-radius:50%;border:1.5px solid var(--ink-4);margin-top:4px}
+.step.on .dot{background:var(--ink);border-color:var(--ink)}
+.step.on{color:var(--ink-2)}
+.step::before{content:"";position:absolute;left:4px;top:16px;bottom:-4px;width:1px;background:var(--line)}
+.step:last-child::before{display:none}
+
+.bubble{max-width:84%;padding:9px 12px;border-radius:14px;font-size:12.5px;line-height:1.45}
+.bubble.me{align-self:flex-end;background:var(--ink);color:var(--paper);border-bottom-right-radius:5px}
+.bubble.ai{align-self:flex-start;background:var(--sunk);color:var(--ink);border-bottom-left-radius:5px}
+.thread{display:flex;flex-direction:column;gap:8px}
+.askbar{display:flex;align-items:center;gap:8px;border:1px solid var(--line);border-radius:999px;padding:9px 14px;font-size:12.5px;color:var(--ink-4);min-height:44px}
+.askbar .mic{margin-left:auto;width:18px;height:18px;border-radius:50%;background:var(--ink);flex:0 0 auto}
+
+.bars{display:flex;align-items:flex-end;gap:3px;height:52px}
+.bars i{flex:1;background:var(--line);border-radius:2px 2px 0 0}
+.bars i.hi{background:var(--ink)}
+.bars i.mid{background:var(--ink-4)}
+
+.timeline{display:flex;flex-direction:column;gap:1px}
+.tl{display:grid;grid-template-columns:38px 1fr auto;gap:10px;align-items:center;padding:8px 0;border-bottom:1px solid var(--line-2);font-size:12px}
+.tl:last-child{border-bottom:none}
+.tl .d{font-family:var(--mono);font-size:10.5px;color:var(--ink-3);text-align:right;font-variant-numeric:tabular-nums}
+.tl.pay{font-weight:600}
+.tl.pay .d{color:var(--ink)}
+
+.lock{background:var(--sunk);border-radius:16px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.notif{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:9px 11px;display:flex;flex-direction:column;gap:3px}
+.notif .n-h{display:flex;justify-content:space-between;font-family:var(--mono);font-size:9px;letter-spacing:.1em;text-transform:uppercase;color:var(--ink-4)}
+.notif .n-b{font-size:12px;line-height:1.4}
+
+.avatars{display:flex;padding-right:6px}
+.av{width:26px;height:26px;border-radius:50%;border:1px solid var(--line);display:grid;place-items:center;font-family:var(--mono);font-size:9.5px;color:var(--ink-2);background:var(--card);margin-right:-6px}
+.kv{display:flex;justify-content:space-between;gap:10px;font-size:11.5px;padding:4px 0;border-bottom:1px dotted var(--line)}
+.kv:last-child{border-bottom:none}
+.kv b{font-weight:600;font-family:var(--mono);font-size:11px;font-variant-numeric:tabular-nums}
+.kv span{color:var(--ink-3)}
+
+.brand{display:flex;flex-direction:column;align-items:center;gap:6px;margin-top:auto;margin-bottom:auto}
+.brand h2{font-family:var(--display);font-size:44px;font-weight:700;letter-spacing:-.03em}
+.seal{width:60px;height:60px;border:1.5px solid var(--ink);border-radius:50%;display:grid;place-items:center;font-family:var(--mono);font-size:19px;margin-bottom:6px}
+
+@media(prefers-reduced-motion:no-preference){
+  .screen{animation:fade .18s ease}
+  @keyframes fade{from{opacity:.4}to{opacity:1}}
+}
+</style>
+</head>
+<body>
+<div class="app">
+
+  <!-- Language toggle -->
+  <div class="lang-toggle" role="group" aria-label="Language">
+    <button class="langbtn" data-lang="ms" aria-pressed="true">BM</button>
+    <button class="langbtn" data-lang="en" aria-pressed="false">EN</button>
+  </div>
+
+  <div class="statusbar"><span>8:14 PG</span><span>KERANI</span></div>
+
+  <div class="stage" id="stage">
+
+    <!-- 01 WELCOME -->
+    <section class="screen" id="welcome" data-tab="none">
+      <div class="brand">
+        <div class="seal">K</div>
+        <h2>Kerani</h2>
+        <p class="s-sub" style="text-align:center;max-width:24ch">Urusan kecil, saya uruskan.<br>Bil, renewal, saman, sekolah.</p>
+      </div>
+      <div class="card flat">
+        <p class="s-kicker">Apa saya buat</p>
+        <p class="sub" style="color:var(--ink-2)">Saya baca bil dan surat awak, ingat semua tarikh, siapkan kerja — lepas tu tanya awak sebelum bayar apa-apa.</p>
+      </div>
+      <button class="btn" data-goto="language">Mula</button>
+      <button class="btn quiet" data-goto="today">Saya dah ada akaun</button>
+    </section>
+
+    <!-- 02 LANGUAGE -->
+    <section class="screen" id="language" data-tab="none">
+      <p class="s-kicker">Satu soalan sahaja</p>
+      <h3 class="s-title">Macam mana awak nak cakap?</h3>
+      <p class="s-sub">Saya boleh campur. Kebanyakan orang campur.</p>
+      <button class="opt" data-toggle="single"><span class="mark"></span><span><span class="ttl">Rojak</span><br><span class="sub">BM + English, macam WhatsApp</span></span></button>
+      <button class="opt" data-toggle="single"><span class="mark"></span><span><span class="ttl">Bahasa Melayu</span><br><span class="sub">Penuh, tanpa campur</span></span></button>
+      <button class="opt" data-toggle="single"><span class="mark"></span><span><span class="ttl">English</span><br><span class="sub">Straight English only</span></span></button>
+      <button class="opt" data-toggle="single"><span class="mark"></span><span><span class="ttl">华语 · 中文</span><br><span class="sub">中文为主，术语用英文</span></span></button>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Panggil saya</span><br><span class="sub">Farah · bukan "Puan Farah"</span></span><span class="chip">Tukar</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Balas guna suara</span><br><span class="sub">Untuk masa memandu</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+      </div>
+      <button class="btn" data-goto="pulse1">Masuk ke Pulse</button>
+    </section>
+
+    <!-- 03 PULSE DAY ONE -->
+    <section class="screen" id="pulse1" data-tab="today">
+      <p class="s-kicker">Pulse</p>
+      <h3 class="s-title">Saya jaga tarikh. Awak tak payah ingat.</h3>
+      <p class="s-sub">Bil, road tax, cukai pintu, sekolah — semua ada tarikh mati. Saya kira mundur, saya beritahu awal, saya siapkan kerja.</p>
+      <div class="sec-h"><strong>Mana satu awak ada?</strong><span>Tekan je</span></div>
+      <div class="chiprow">
+        <button class="chip" data-toggle="self" data-on="1">Kereta</button>
+        <button class="chip" data-toggle="self" data-on="1">Rumah sendiri</button>
+        <button class="chip" data-toggle="self" data-on="1">Anak sekolah</button>
+        <button class="chip" data-toggle="self" data-on="0">Jaga mak / ayah</button>
+        <button class="chip" data-toggle="self" data-on="0">PTPTN</button>
+        <button class="chip" data-toggle="self" data-on="0">Kedai online</button>
+      </div>
+      <div class="card lift">
+        <p class="s-kicker">Dari situ sahaja</p>
+        <div class="row"><span class="ttl">Saya dah tahu 6 tarikh awak</span></div>
+        <div class="kv"><span>Road tax &amp; insurans</span><b>Setiap tahun</b></div>
+        <div class="kv"><span>Cukai pintu MBPJ</span><b>Jun &amp; Dis</b></div>
+        <div class="kv"><span>e-Filing LHDN</span><b>Mac – Apr</b></div>
+        <div class="kv"><span>Yuran &amp; cuti sekolah</span><b>Ikut takwim</b></div>
+        <p class="sub">Tinggal saya nak tahu tarikh sebenar awak.</p>
+      </div>
+      <button class="btn" data-goto="household">Bagi nombor plat · 30 saat</button>
+      <button class="btn quiet" data-goto="connect">Atau forward satu bil, saya baca</button>
+      <div class="sec-h"><strong>Seminggu lagi, nampak macam ni</strong><span>Contoh</span></div>
+      <button class="card flat" data-goto="today" style="text-align:left">
+        <div class="row"><span><span class="ttl">Renew road tax Myvi</span><br><span class="sub">Luput 30 Sep · borang dah siap</span></span><span class="chip">Contoh</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Saman JPJ — diskaun tamat 19 Sep</span><br><span class="sub">RM 150 kalau bayar minggu ni, RM 300 lepas tu</span></span><span class="chip">Contoh</span></div>
+      </button>
+      <div class="sec-h"><strong>Bila awak sempat</strong><span>Tak perlu sekarang</span></div>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Bil masuk sendiri</span><br><span class="sub">Tukar e-mel bil ke alamat Kerani · sekali je</span></span><span class="chip">Buka</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Siapa dalam rumah</span><br><span class="sub">Kongsi senarai dengan suami / isteri</span></span><span class="chip">Buka</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Ringkasan pagi 7:00</span><br><span class="sub">Satu mesej sehari, itu je</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+      </div>
+      <div class="askbar">Tanya apa-apa…<span class="mic"></span></div>
+    </section>
+
+    <!-- 04 CONNECT -->
+    <section class="screen" id="connect" data-tab="today">
+      <div class="row"><button class="chip" data-goto="pulse1">← Pulse</button><span class="chip">Langkah 1 / 3</span></div>
+      <h3 class="s-title">Satu nombor. Forward je.</h3>
+      <p class="s-sub">Saya tak boleh baca chat awak. Awak forward, saya baca — itu sahaja.</p>
+      <div class="card lift">
+        <p class="s-kicker">Nombor Kerani awak</p>
+        <div class="row"><span class="amt" style="font-size:17px">+60 12-700 4471</span><span class="chip">Salin</span></div>
+        <button class="btn">Buka WhatsApp</button>
+      </div>
+      <div class="card">
+        <p class="s-kicker">Apa yang boleh forward</p>
+        <div class="kv"><span>SMS bil</span><b>TNB, Air Selangor, Unifi</b></div>
+        <div class="kv"><span>Gambar surat sekolah</span><b>Terus dari grup kelas</b></div>
+        <div class="kv"><span>Notis saman &amp; renewal</span><b>JPJ, insurans, MBPJ</b></div>
+        <div class="kv"><span>Resit &amp; invois</span><b>Untuk e-Filing hujung tahun</b></div>
+      </div>
+      <div class="card">
+        <p class="s-kicker">Lepas ni — bil masuk sendiri</p>
+        <div class="row"><span class="amt" style="font-size:14px">farah.k7@kerani.my</span><span class="chip">Salin</span></div>
+        <p class="sub">Tukar e-mel bil awak ke alamat ni. Sekali je buat, lepas tu tak payah forward lagi.</p>
+        <div class="kv"><span>TNB · myTNB</span><b>2 minit</b></div>
+        <div class="kv"><span>Unifi · MyTM</span><b>2 minit</b></div>
+        <div class="kv"><span>Insurans · Etiqa</span><b>1 minit</b></div>
+      </div>
+      <div class="card flat">
+        <p class="s-kicker">Belum lagi</p>
+        <div class="kv"><span>Sambung bank — baca baki</span><b>2027</b></div>
+        <div class="kv"><span>Baca SMS sendiri</span><b>Android sahaja</b></div>
+        <div class="kv"><span>Bayar terus dalam MyJPJ</span><b>Perlu lesen ejen</b></div>
+        <p class="sub">Saya beritahu awak bila satu-satu dah boleh.</p>
+      </div>
+      <button class="btn" data-goto="firstscan">Dah forward</button>
+    </section>
+
+    <!-- 05 FIRST SCAN -->
+    <section class="screen" id="firstscan" data-tab="none">
+      <div class="row"><button class="chip" data-goto="pulse1">← Pulse</button><span class="chip solid">Baru masuk</span></div>
+      <h3 class="s-title">Saya jumpa 9 perkara</h3>
+      <p class="s-sub">Dari 7 benda yang awak forward.</p>
+      <div class="steps">
+        <div class="step on"><span class="dot"></span><span><b>4 bil belum bayar</b>TNB, Air Selangor, Unifi, Astro</span></div>
+        <div class="step on"><span class="dot"></span><span><b>2 renewal hampir luput</b>Road tax 30 Sep · insurans 12 Okt</span></div>
+        <div class="step on"><span class="dot"></span><span><b>1 saman JPJ</b>RM 150 — diskaun tamat 19 Sep</span></div>
+        <div class="step on"><span class="dot"></span><span><b>Yuran PIBG belum hantar</b>Borang Danish, due Jumaat</span></div>
+        <div class="step on"><span class="dot"></span><span><b>RM 1,180 pelepasan cukai</b>Resit tuisyen &amp; buku, belum dituntut</span></div>
+      </div>
+      <div class="card lift">
+        <p class="s-kicker">Kalau semua diuruskan</p>
+        <div class="row"><span class="ttl">Jimat masa</span><span class="amt">≈ 4 jam / bulan</span></div>
+        <div class="row"><span class="ttl">Elak denda lewat</span><span class="amt">RM 285</span></div>
+      </div>
+      <button class="btn" data-goto="today">Balik ke Pulse</button>
+    </section>
+
+    <!-- 06 HOUSEHOLD -->
+    <section class="screen" id="household" data-tab="today">
+      <div class="row"><button class="chip" data-goto="pulse1">← Pulse</button><span class="chip">Boleh tambah bila-bila</span></div>
+      <h3 class="s-title">Siapa yang awak jaga?</h3>
+      <p class="s-sub">Bukan kontak — tanggungjawab. Ini yang tentukan apa saya cari.</p>
+      <div class="card">
+        <div class="row"><span class="ttl">Rumah</span><span class="chip">3 orang dewasa</span></div>
+        <div class="kv"><span>Amir · suami</span><b>Boleh lihat &amp; luluskan</b></div>
+        <div class="kv"><span>Danish · 11 thn</span><b>SK Kota Damansara</b></div>
+        <div class="kv"><span>Alia · 7 thn</span><b>SK Kota Damansara</b></div>
+        <div class="kv"><span>Mak · Ipoh</span><b>Temujanji &amp; bil</b></div>
+      </div>
+      <div class="card">
+        <div class="row"><span class="ttl">Barang yang ada tarikh</span><span class="chip">4</span></div>
+        <div class="kv"><span>Myvi 2019 · WXX 1234</span><b>Road tax, insurans</b></div>
+        <div class="kv"><span>Rumah teres · MBPJ</span><b>Cukai pintu</b></div>
+        <div class="kv"><span>Pasport × 4</span><b>Tarikh luput</b></div>
+        <div class="kv"><span>Kedai online · SSM</span><b>e-Invois, cukai</b></div>
+      </div>
+      <button class="btn" data-goto="today">Simpan</button>
+    </section>
+
+    <!-- 07 TODAY (Pulse) -->
+    <section class="screen" id="today" data-tab="today">
+      <p class="s-kicker">Pulse</p>
+      <div class="sec-h"><h3 class="s-title">Selamat pagi, Farah</h3></div>
+      <p class="s-sub">Isnin, 8 Sep · gaji lagi 17 hari</p>
+      <div class="sec-h"><strong>Perlu awak luluskan</strong><span>2</span></div>
+      <button class="card lift" data-goto="approval" style="text-align:left">
+        <div class="row"><span><span class="ttl">Renew road tax Myvi</span><br><span class="sub">Luput 30 Sep · saya dah siap borang</span></span><span class="chip solid">Luluskan</span></div>
+        <div class="row"><span class="sub">RM 90.00 + RM 6 servis</span><span class="amt">RM 96.00</span></div>
+      </button>
+      <div class="card lift">
+        <div class="row"><span><span class="ttl">Bayar saman JPJ</span><br><span class="sub">Diskaun 50% tamat 19 Sep</span></span><span class="chip late">11 hari</span></div>
+        <div class="row"><span class="sub">RM 300 → RM 150 kalau bayar minggu ini</span><span class="amt">RM 150</span></div>
+      </div>
+      <div class="sec-h"><strong>Saya dah buat</strong><span>Semalam</span></div>
+      <div class="card flat">
+        <div class="row"><span class="sub" style="color:var(--ink-2)">Bayar TNB RM 187.40 — dalam had awak</span><span class="chip done">Selesai</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="sub" style="color:var(--ink-2)">Isi borang PIBG Danish, tunggu tandatangan</span><span class="chip done">Sedia</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="sub" style="color:var(--ink-2)">Simpan 6 resit tuisyen untuk e-Filing</span><span class="chip done">Fail</span></div>
+      </div>
+      <div class="sec-h"><strong>Akan datang</strong><span>14 hari</span></div>
+      <div class="card">
+        <div class="kv"><span>Insurans Myvi · 12 Okt</span><b>RM 1,120</b></div>
+        <div class="kv"><span>Cukai pintu MBPJ · 30 Sep</span><b>RM 210</b></div>
+        <div class="kv"><span>Temujanji Mak, Klinik Ipoh · 14 Sep</span><b>10:30 PG</b></div>
+      </div>
+      <button class="card flat" data-goto="household" style="text-align:left">
+        <div class="row"><span><span class="ttl">Kerani sedia 75%</span><br><span class="sub">Tinggal satu: senaraikan pasport &amp; insurans</span></span><span class="chip">Buka</span></div>
+      </button>
+      <div class="askbar">Tanya apa-apa…<span class="mic"></span></div>
+    </section>
+
+    <!-- 08 APPROVAL -->
+    <section class="screen" id="approval" data-tab="today">
+      <div class="row"><button class="chip" data-goto="today">← Pulse</button><span class="chip">Perlu kelulusan</span></div>
+      <h3 class="s-title">Renew road tax Myvi</h3>
+      <p class="s-sub">WXX 1234 · luput 30 September</p>
+      <div class="card">
+        <p class="s-kicker">Apa saya akan buat</p>
+        <div class="steps">
+          <div class="step on"><span class="dot"></span><span><b>Semak insurans masih sah</b>Sah sampai 12 Okt — cukup untuk renew</span></div>
+          <div class="step"><span class="dot"></span><span><b>Buka MyJPJ, awak tekan bayar</b>RM 90 road tax + RM 6 yuran</span></div>
+          <div class="step"><span class="dot"></span><span><b>Simpan resit digital</b>Masuk vault, hantar salinan ke Amir</span></div>
+        </div>
+      </div>
+      <div class="card flat">
+        <div class="kv"><span>Cara bayar</span><b>Dalam MyJPJ, kad awak</b></div>
+        <div class="kv"><span>Had bulanan awak</span><b>RM 800 · guna RM 187</b></div>
+        <div class="kv"><span>Sumber</span><b>Notis JPJ yang awak forward</b></div>
+      </div>
+      <div class="card">
+        <p class="s-kicker">Kenapa saya tanya</p>
+        <p class="sub" style="color:var(--ink-2)">Lebih RM 50 dan melibatkan agensi kerajaan. Awak boleh naikkan had ini dalam tetapan.</p>
+      </div>
+      <button class="btn" data-goto="errand">Teruskan ke MyJPJ — RM 96.00</button>
+      <div class="btnrow">
+        <button class="btn ghost" data-goto="chat">Tanya dulu</button>
+        <button class="btn quiet" data-goto="today">Nanti dulu</button>
+      </div>
+    </section>
+
+    <!-- 09 ERRAND -->
+    <section class="screen" id="errand" data-tab="today">
+      <div class="row"><button class="chip" data-goto="today">← Pulse</button><span class="chip solid">Sedang buat</span></div>
+      <h3 class="s-title">Saya uruskan sekarang</h3>
+      <p class="s-sub">Boleh tutup app. Saya ping bila siap.</p>
+      <div class="card lift">
+        <div class="row"><span class="ttl">Road tax Myvi</span><span class="amt">RM 96.00</span></div>
+        <div class="steps">
+          <div class="step on"><span class="dot"></span><span><b>Borang dah siap</b>Tinggal awak tekan bayar dalam MyJPJ</span></div>
+          <div class="step on"><span class="dot"></span><span><b>Sahkan insurans</b>Berjaya</span></div>
+          <div class="step on"><span class="dot"></span><span><b>Bayar</b>Resit LKJ-88213 disimpan</span></div>
+          <div class="step"><span class="dot"></span><span><b>Hantar salinan ke Amir</b>Menunggu</span></div>
+        </div>
+      </div>
+      <div class="sec-h"><strong>Sementara tu</strong><span>Cadangan</span></div>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Servis Myvi dah lewat 1,400 km</span><br><span class="sub">3 bengkel dekat rumah, Sabtu masih ada slot</span></span></div>
+        <div class="kv"><span>Bengkel Hasnan · 2.1 km</span><b>RM 180</b></div>
+        <div class="kv"><span>Perodua SC Kota D. · 4.8 km</span><b>RM 245</b></div>
+        <div class="kv"><span>Auto Klinik PJ · 6.0 km</span><b>RM 165</b></div>
+        <button class="btn ghost" data-goto="chat">Tempah Sabtu 10 pagi</button>
+      </div>
+    </section>
+
+    <!-- 10 CHAT -->
+    <section class="screen" id="chat" data-tab="ask">
+      <div class="row"><span class="s-kicker">Perbualan</span><span class="chip">Suara &amp; teks</span></div>
+      <div class="thread">
+        <p class="bubble me">Eh, bil TNB dah masuk ke? Gaji lambat bulan ni</p>
+        <p class="bubble ai">Dah masuk semalam — RM 187.40, due 18 Sep. Saya belum bayar sebab awak cakap nak tunggu gaji.</p>
+        <p class="bubble ai">Kalau nak, saya boleh minta TNB tukar tarikh bil ke 28hb. Sekali je buat, lepas tu senang tiap bulan.</p>
+        <p class="bubble me">Boleh. Berapa lagi yang keluar sebelum 25hb?</p>
+        <p class="bubble ai">RM 546 — Unifi, Astro, tuisyen Alia, dan saman kalau nak diskaun. Lepas tu takde apa-apa sampai gaji.</p>
+        <p class="bubble me">Tolong tolak Astro dulu la</p>
+        <p class="bubble ai">Astro RM 129.90 — saya jeda sampai lepas gaji. Nak saya semak sama ada pakej tu masih berbaloi? 3 bulan ni tengok 4 jam je.</p>
+      </div>
+      <div class="bars" aria-hidden="true">
+        <i style="height:20%"></i><i class="mid" style="height:45%"></i><i class="hi" style="height:80%"></i><i class="hi" style="height:60%"></i><i class="mid" style="height:95%"></i><i style="height:35%"></i><i class="hi" style="height:70%"></i><i class="mid" style="height:50%"></i><i style="height:25%"></i><i class="hi" style="height:65%"></i><i style="height:30%"></i><i class="mid" style="height:48%"></i><i style="height:18%"></i>
+      </div>
+      <div class="askbar">Tekan &amp; cakap…<span class="mic"></span></div>
+    </section>
+
+    <!-- 11 MONEY -->
+    <section class="screen" id="money" data-tab="money">
+      <h3 class="s-title">Sampai gaji</h3>
+      <p class="s-sub">17 hari · gaji masuk 25hb</p>
+      <div class="card lift">
+        <div class="row"><span class="sub">Bil sebelum gaji</span><span class="amt">RM 1,946.10</span></div>
+        <div class="row"><span class="sub">Dah dibayar</span><span class="amt">− RM 187.40</span></div>
+        <div class="divider"></div>
+        <div class="row"><span class="ttl">Belum dibayar</span><span class="amt">RM 1,758.70</span></div>
+        <div class="bars" style="height:38px" aria-hidden="true">
+          <i class="hi" style="height:100%"></i><i class="hi" style="height:92%"></i><i class="mid" style="height:74%"></i><i class="mid" style="height:70%"></i><i class="mid" style="height:52%"></i><i style="height:48%"></i><i style="height:44%"></i><i style="height:40%"></i><i style="height:38%"></i><i class="hi" style="height:96%"></i>
+        </div>
+        <p class="sub">Hari paling ketat: 18–20 Sep · baki bank belum tersambung, saya kira dari bil sahaja</p>
+      </div>
+      <div class="sec-h"><strong>Kalendar bil</strong><span>September</span></div>
+      <div class="timeline">
+        <div class="tl"><span class="d">10 Sep</span><span>Unifi · auto</span><span class="amt">139.00</span></div>
+        <div class="tl"><span class="d">12 Sep</span><span>Tuisyen Alia</span><span class="amt">280.00</span></div>
+        <div class="tl"><span class="d">18 Sep</span><span>TNB · ditahan</span><span class="amt">187.40</span></div>
+        <div class="tl"><span class="d">19 Sep</span><span>Saman · diskaun tamat</span><span class="amt">150.00</span></div>
+        <div class="tl"><span class="d">20 Sep</span><span>PTPTN · auto</span><span class="amt">150.00</span></div>
+        <div class="tl pay"><span class="d">25 Sep</span><span>Gaji masuk</span><span class="amt">+ 6,400.00</span></div>
+        <div class="tl"><span class="d">30 Sep</span><span>Cukai pintu MBPJ</span><span class="amt">210.00</span></div>
+      </div>
+      <div class="card">
+        <p class="s-kicker">Saya perasan</p>
+        <p class="sub" style="color:var(--ink-2)">4 bil jatuh sebelum gaji. Kalau saya pindah TNB dan Unifi ke 28hb, bulan awak jadi lapang. Saya boleh mohon — ambil masa 5 minit.</p>
+        <button class="btn ghost" data-goto="chat">Cuba pindah tarikh</button>
+      </div>
+    </section>
+
+    <!-- 12 RENEWALS -->
+    <section class="screen" id="renewals" data-tab="money">
+      <h3 class="s-title">Peti dokumen</h3>
+      <p class="s-sub">Setiap satu ada tarikh. Saya kira mundur.</p>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Road tax Myvi</span><br><span class="sub">Dibayar 8 Sep · sah 12 bulan</span></span><span class="chip done">Baru</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Insurans kenderaan</span><br><span class="sub">Etiqa · NCD 55%</span></span><span class="chip solid">34 hari</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Pasport Danish</span><br><span class="sub">Luput sebelum cuti sekolah Nov</span></span><span class="chip late">Bahaya</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Cukai pintu MBPJ</span><br><span class="sub">Setengah tahun kedua</span></span><span class="chip">22 hari</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Lesen memandu Amir</span><br><span class="sub">Renew 5 tahun</span></span><span class="chip">7 bulan</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">e-Filing LHDN</span><br><span class="sub">18 resit dikumpul · RM 1,180 pelepasan</span></span><span class="chip">Apr 2027</span></div>
+      </div>
+      <div class="card flat">
+        <p class="s-kicker">Cadangan</p>
+        <p class="sub" style="color:var(--ink-2)">Pasport Danish perlu 3 minggu. Slot UTC Shah Alam ada Sabtu ini 9:20 pagi — kalendar awak kosong.</p>
+        <button class="btn ghost" data-goto="chat">Ambil slot tu</button>
+      </div>
+    </section>
+
+    <!-- 13 FAMILY -->
+    <section class="screen" id="family" data-tab="family">
+      <div class="row"><h3 class="s-title">Rumah</h3><span class="avatars"><span class="av">F</span><span class="av">A</span><span class="av">D</span><span class="av">+2</span></span></div>
+      <p class="s-sub">Amir nampak benda yang sama. Tak payah forward WhatsApp lagi.</p>
+      <div class="sec-h"><strong>Hari ini</strong><span>Isnin</span></div>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Ambil Danish · 4:00 ptg</span><br><span class="sub">Amir — saya dah masuk kalendar dia</span></span><span class="chip">Amir</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Tandatangan borang PIBG</span><br><span class="sub">Saya dah isi, tinggal tandatangan</span></span><span class="chip solid">Awak</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Beli barang dapur</span><br><span class="sub">11 barang · Lotus's murah RM 18 dari biasa</span></span><span class="chip">Sesiapa</span></div>
+      </div>
+      <div class="sec-h"><strong>Mak di Ipoh</strong><span>Jauh</span></div>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Temujanji klinik · 14 Sep, 10:30 pg</span><br><span class="sub">Saya ingatkan Mak pagi tu, dan beritahu awak dia dah sampai</span></span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Bil TNB rumah Mak</span><br><span class="sub">RM 62.30 · awak bayar tiap bulan</span></span><span class="chip done">Auto</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Balik kampung Raya</span><br><span class="sub">Tiket bas Danish &amp; Alia — harga naik minggu depan</span></span><span class="chip">Tengok</span></div>
+      </div>
+      <button class="btn ghost" data-goto="chat">Minta Kerani uruskan sesuatu</button>
+    </section>
+
+    <!-- 14 RULES -->
+    <section class="screen" id="rules" data-tab="log">
+      <h3 class="s-title">Apa saya boleh buat sendiri</h3>
+      <p class="s-sub">Awak yang tetapkan. Boleh tarik balik bila-bila.</p>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Bayar bil bawah RM 250</span><br><span class="sub">Utiliti &amp; telco yang dah biasa sahaja</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Had bulanan</span><br><span class="sub">RM 800 · guna RM 283 bulan ni</span></span><span class="chip">Tukar</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Isi borang kerajaan</span><br><span class="sub">Saya siapkan, awak hantar</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Telefon &amp; tempah bagi pihak saya</span><br><span class="sub">Bengkel, klinik, sekolah</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Balas mesej sesiapa</span><br><span class="sub">Tak pernah. Saya draf sahaja.</span></span><button class="toggle" data-on="0" data-toggle="self"></button></div>
+      </div>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Waktu senyap</span><br><span class="sub">10:30 mlm – 6:30 pg · kecuali kecemasan</span></span><button class="toggle" data-on="1" data-toggle="self"></button></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Jangan usik</span><br><span class="sub">Grup keluarga, foto, mesej kerja</span></span><span class="chip">3 tempat</span></div>
+      </div>
+      <button class="btn ghost" data-goto="activity">Tengok apa saya dah buat</button>
+    </section>
+
+    <!-- 15 ACTIVITY LOG -->
+    <section class="screen" id="activity" data-tab="log">
+      <h3 class="s-title">Log</h3>
+      <p class="s-sub">Setiap tindakan, dengan resit. Boleh batalkan 24 jam.</p>
+      <div class="card">
+        <div class="row"><span><span class="ttl">Bayar road tax RM 96.00</span><br><span class="sub">8 Sep 8:16 pg · awak luluskan · MyJPJ LKJ-88213</span></span><span class="chip">Resit</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Bayar TNB RM 187.40</span><br><span class="sub">7 Sep 9:02 mlm · dalam had · boleh batal</span></span><span class="chip">Batal</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Baca 14 e-mel, ambil 3</span><br><span class="sub">7 Sep · TNB, sekolah, Etiqa · yang lain diabaikan</span></span><span class="chip done">Baca</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Draf e-mel ke guru kelas</span><br><span class="sub">6 Sep · tunggu awak hantar</span></span><span class="chip solid">Draf</span></div>
+        <div class="divider"></div>
+        <div class="row"><span><span class="ttl">Jeda langganan Astro</span><br><span class="sub">6 Sep · awak minta dalam perbualan</span></span><span class="chip done">Selesai</span></div>
+      </div>
+      <div class="card flat">
+        <p class="s-kicker">Bulan ini</p>
+        <div class="kv"><span>Tindakan diambil</span><b>31</b></div>
+        <div class="kv"><span>Ditanya dulu</span><b>9</b></div>
+        <div class="kv"><span>Dibatalkan awak</span><b>1</b></div>
+        <div class="kv"><span>Denda lewat dielak</span><b>RM 285</b></div>
+      </div>
+    </section>
+
+    <!-- 16 LOCKSCREEN -->
+    <section class="screen" id="lockscreen" data-tab="none">
+      <p class="s-kicker">Skrin kunci · nada &amp; masa</p>
+      <h3 class="s-title">Bila saya ganggu</h3>
+      <p class="s-sub">Tiga tahap sahaja. Selebihnya tunggu dalam app.</p>
+      <div class="lock">
+        <div class="notif">
+          <div class="n-h"><span>Kerani · sekarang</span><span>Perlu awak</span></div>
+          <p class="n-b"><b>Diskaun saman tamat esok.</b> RM 150 kalau bayar hari ni, RM 300 lepas tu. Luluskan?</p>
+        </div>
+        <div class="notif">
+          <div class="n-h"><span>Kerani · 7:02 pg</span><span>Ringkasan</span></div>
+          <p class="n-b">Pagi Farah. 2 benda tunggu awak, saya dah settle 3. Tiada yang mendesak sampai Khamis.</p>
+        </div>
+        <div class="notif">
+          <div class="n-h"><span>Kerani · semalam</span><span>Dah siap</span></div>
+          <p class="n-b">Road tax Myvi dah renew. Resit dalam peti dokumen, salinan dah hantar ke Amir.</p>
+        </div>
+      </div>
+      <div class="card flat">
+        <p class="s-kicker">Peraturan</p>
+        <p class="sub" style="color:var(--ink-2)">Satu ringkasan pagi. Ganggu hanya bila ada duit atau tarikh mati terlibat. Tak pernah dua kali untuk benda sama.</p>
+      </div>
+      <button class="btn" data-goto="today">Balik ke Pulse</button>
+    </section>
+
+  </div>
+
+  <nav class="tabbar" id="tabbar">
+    <span class="tab" data-tab="today" data-goto="today"><i></i>Pulse</span>
+    <span class="tab" data-tab="money" data-goto="money"><i></i>Duit</span>
+    <span class="tab mid" data-tab="ask" data-goto="chat"><i></i>Tanya</span>
+    <span class="tab" data-tab="family" data-goto="family"><i></i>Rumah</span>
+    <span class="tab" data-tab="log" data-goto="activity"><i></i>Log</span>
+  </nav>
+</div>
+
+<script>
+(function(){
+  var order = ["welcome","language","pulse1","connect","firstscan","household","today","approval","errand","chat","money","renewals","family","rules","activity","lockscreen"];
+
+  var screens = {};
+  order.forEach(function(id){ screens[id] = document.getElementById(id); });
+  var tabs = {};
+  document.querySelectorAll(".tab").forEach(function(t){ tabs[t.dataset.tab] = t; });
+  var tabbar = document.getElementById("tabbar");
+  var current = "welcome";
+
+  // ── Translation dictionary ──
+  var DICT = {
+    "stage": {
+      "Urusan kecil, saya uruskan.":"The small stuff, I'll handle.",
+      "Bil, renewal, saman, sekolah.":"Bills, renewals, saman, school.",
+      "Apa saya buat":"What I do",
+      "Saya baca bil dan surat awak, ingat semua tarikh, siapkan kerja — lepas tu tanya awak sebelum bayar apa-apa.":"I read your bills and letters, remember every date, get the work ready — then ask you before paying anything.",
+      "Mula":"Start",
+      "Saya dah ada akaun":"I already have an account",
+      "Satu soalan sahaja":"Just one question",
+      "Macam mana awak nak cakap?":"How should I talk to you?",
+      "Saya boleh campur. Kebanyakan orang campur.":"I can mix. Most people mix.",
+      "BM + English, macam WhatsApp":"Malay + English, like WhatsApp",
+      "Penuh, tanpa campur":"Full Malay, no mixing",
+      "Panggil saya":"Call me",
+      "Farah · bukan \"Puan Farah\"":"Farah · not \u201cPuan Farah\u201d",
+      "Tukar":"Change",
+      "Balas guna suara":"Reply by voice",
+      "Untuk masa memandu":"For when you're driving",
+      "Masuk ke Pulse":"Into Pulse",
+      "Saya jaga tarikh. Awak tak payah ingat.":"I keep the dates. You don't have to remember.",
+      "Bil, road tax, cukai pintu, sekolah — semua ada tarikh mati. Saya kira mundur, saya beritahu awal, saya siapkan kerja.":"Bills, road tax, assessment tax, school — everything has a deadline. I count down, I tell you early, I get the work ready.",
+      "Mana satu awak ada?":"Which of these do you have?",
+      "Tekan je":"Just tap",
+      "Kereta":"A car",
+      "Rumah sendiri":"Own your home",
+      "Anak sekolah":"Kids in school",
+      "Jaga mak / ayah":"Caring for a parent",
+      "Kedai online":"An online shop",
+      "Dari situ sahaja":"From that alone",
+      "Saya dah tahu 6 tarikh awak":"I already know 6 of your dates",
+      "Road tax & insurans":"Road tax & insurance",
+      "Setiap tahun":"Every year",
+      "Jun & Dis":"Jun & Dec",
+      "e-Filing LHDN":"LHDN e-Filing",
+      "Mac – Apr":"Mar – Apr",
+      "Yuran & cuti sekolah":"Fees & school holidays",
+      "Ikut takwim":"Per the school calendar",
+      "Tinggal saya nak tahu tarikh sebenar awak.":"I just need your actual dates now.",
+      "Bagi nombor plat · 30 saat":"Give me your car plate · 30 sec",
+      "Atau forward satu bil, saya baca":"Or forward one bill and I'll read it",
+      "Seminggu lagi, nampak macam ni":"A week from now, it looks like this",
+      "Luput 30 Sep · borang dah siap":"Expires 30 Sep · form already filled",
+      "Saman JPJ — diskaun tamat 19 Sep":"JPJ saman — discount ends 19 Sep",
+      "RM 150 kalau bayar minggu ni, RM 300 lepas tu":"RM 150 if you pay this week, RM 300 after",
+      "Bila awak sempat":"Whenever you have time",
+      "Tak perlu sekarang":"Not needed now",
+      "Bil masuk sendiri":"Bills arrive on their own",
+      "Tukar e-mel bil ke alamat Kerani · sekali je":"Point your billing e-mail at Kerani · once only",
+      "Siapa dalam rumah":"Who's in the house",
+      "Kongsi senarai dengan suami / isteri":"Share the list with your spouse",
+      "Ringkasan pagi 7:00":"Morning summary at 7:00",
+      "Satu mesej sehari, itu je":"One message a day, that's it",
+      "Tanya apa-apa…":"Ask me anything…",
+      "Contoh":"Example",
+      "← Pulse":"← Pulse",
+      "Langkah 1 / 3":"Step 1 / 3",
+      "Satu nombor. Forward je.":"One number. Just forward.",
+      "Saya tak boleh baca chat awak. Awak forward, saya baca — itu sahaja.":"I can't read your chats. You forward, I read — that's all.",
+      "Nombor Kerani awak":"Your Kerani number",
+      "Salin":"Copy",
+      "Buka WhatsApp":"Open WhatsApp",
+      "Apa yang boleh forward":"What you can forward",
+      "SMS bil":"Bill SMS",
+      "Gambar surat sekolah":"Photos of school letters",
+      "Terus dari grup kelas":"Straight from the class group",
+      "Notis saman & renewal":"Saman & renewal notices",
+      "JPJ, insurans, MBPJ":"JPJ, insurance, MBPJ",
+      "Resit & invois":"Receipts & invoices",
+      "Untuk e-Filing hujung tahun":"For e-Filing at year end",
+      "Lepas ni — bil masuk sendiri":"Next — bills arrive on their own",
+      "Tukar e-mel bil awak ke alamat ni. Sekali je buat, lepas tu tak payah forward lagi.":"Switch your billing e-mail to this address. Do it once and you never forward again.",
+      "TNB · myTNB":"TNB · myTNB",
+      "Unifi · MyTM":"Unifi · MyTM",
+      "Insurans · Etiqa":"Insurance · Etiqa",
+      "2 minit":"2 min",
+      "1 minit":"1 min",
+      "Belum lagi":"Not yet",
+      "Sambung bank — baca baki":"Bank link — read balance",
+      "Baca SMS sendiri":"Read SMS automatically",
+      "Android sahaja":"Android only",
+      "Bayar terus dalam MyJPJ":"Pay inside MyJPJ directly",
+      "Perlu lesen ejen":"Needs agent licence",
+      "Saya beritahu awak bila satu-satu dah boleh.":"I'll tell you when each one opens up.",
+      "Dah forward":"I've forwarded",
+      "Baru masuk":"Just in",
+      "Saya jumpa 9 perkara":"I found 9 things",
+      "Dari 7 benda yang awak forward.":"From the 7 things you forwarded.",
+      "4 bil belum bayar":"4 unpaid bills",
+      "2 renewal hampir luput":"2 renewals nearly expired",
+      "Road tax 30 Sep · insurans 12 Okt":"Road tax 30 Sep · insurance 12 Oct",
+      "1 saman JPJ":"1 JPJ saman",
+      "RM 150 — diskaun tamat 19 Sep":"RM 150 — discount ends 19 Sep",
+      "Yuran PIBG belum hantar":"PTA fee not submitted",
+      "Borang Danish, due Jumaat":"Danish's form, due Friday",
+      "RM 1,180 pelepasan cukai":"RM 1,180 in tax relief",
+      "Resit tuisyen & buku, belum dituntut":"Tuition & book receipts, unclaimed",
+      "Kalau semua diuruskan":"If I handle all of it",
+      "Jimat masa":"Time saved",
+      "≈ 4 jam / bulan":"≈ 4 hours / month",
+      "Elak denda lewat":"Late penalties avoided",
+      "Balik ke Pulse":"Back to Pulse",
+      "Boleh tambah bila-bila":"Add to this anytime",
+      "Siapa yang awak jaga?":"Who are you looking after?",
+      "Bukan kontak — tanggungjawab. Ini yang tentukan apa saya cari.":"Not contacts — responsibilities. This decides what I go looking for.",
+      "Rumah":"Household",
+      "3 orang dewasa":"3 adults",
+      "Amir · suami":"Amir · husband",
+      "Boleh lihat & luluskan":"Can view & approve",
+      "Danish · 11 thn":"Danish · age 11",
+      "Alia · 7 thn":"Alia · age 7",
+      "Temujanji & bil":"Appointments & bills",
+      "Barang yang ada tarikh":"Things with dates",
+      "Road tax, insurans":"Road tax, insurance",
+      "Rumah teres · MBPJ":"Terrace house · MBPJ",
+      "Cukai pintu":"Assessment tax",
+      "Pasport × 4":"Passports × 4",
+      "Tarikh luput":"Expiry dates",
+      "Kedai online · SSM":"Online shop · SSM",
+      "e-Invois, cukai":"e-Invoice, tax",
+      "Simpan":"Save",
+      "Selamat pagi, Farah":"Good morning, Farah",
+      "Isnin, 8 Sep · gaji lagi 17 hari":"Monday, 8 Sep · 17 days to payday",
+      "Perlu awak luluskan":"Needs your approval",
+      "Renew road tax Myvi":"Renew Myvi road tax",
+      "Luput 30 Sep · saya dah siap borang":"Expires 30 Sep · form already filled",
+      "Luluskan":"Approve",
+      "RM 90.00 + RM 6 servis":"RM 90.00 + RM 6 service fee",
+      "Bayar saman JPJ":"Pay JPJ saman",
+      "Diskaun 50% tamat 19 Sep":"50% discount ends 19 Sep",
+      "11 hari":"11 days",
+      "RM 300 → RM 150 kalau bayar minggu ini":"RM 300 → RM 150 if paid this week",
+      "Saya dah buat":"What I've done",
+      "Semalam":"Yesterday",
+      "Bayar TNB RM 187.40 — dalam had awak":"Paid TNB RM 187.40 — within your limit",
+      "Selesai":"Done",
+      "Isi borang PIBG Danish, tunggu tandatangan":"Filled Danish's PTA form, needs signing",
+      "Sedia":"Ready",
+      "Simpan 6 resit tuisyen untuk e-Filing":"Filed 6 tuition receipts for e-Filing",
+      "Fail":"Filed",
+      "Akan datang":"Coming up",
+      "14 hari":"14 days",
+      "Insurans Myvi · 12 Okt":"Myvi insurance · 12 Oct",
+      "Cukai pintu MBPJ · 30 Sep":"MBPJ assessment tax · 30 Sep",
+      "Temujanji Mak, Klinik Ipoh · 14 Sep":"Mak's appointment, Ipoh clinic · 14 Sep",
+      "10:30 PG":"10:30 AM",
+      "Kerani sedia 75%":"Kerani 75% ready",
+      "Tinggal satu: senaraikan pasport & insurans":"One left: list your passports & insurance",
+      "Buka":"Open",
+      "Perlu kelulusan":"Needs approval",
+      "WXX 1234 · luput 30 September":"WXX 1234 · expires 30 September",
+      "Apa saya akan buat":"What I'll do",
+      "Semak insurans masih sah":"Check insurance is still valid",
+      "Sah sampai 12 Okt — cukup untuk renew":"Valid to 12 Oct — enough to renew",
+      "Buka MyJPJ, awak tekan bayar":"Open MyJPJ, you tap pay",
+      "RM 90 road tax + RM 6 yuran":"RM 90 road tax + RM 6 fee",
+      "Simpan resit digital":"Save the digital receipt",
+      "Masuk vault, hantar salinan ke Amir":"Into the vault, copy to Amir",
+      "Cara bayar":"Payment",
+      "Dalam MyJPJ, kad awak":"Inside MyJPJ, your card",
+      "Had bulanan awak":"Your monthly limit",
+      "RM 800 · guna RM 187":"RM 800 · RM 187 used",
+      "Sumber":"Source",
+      "Notis JPJ yang awak forward":"JPJ notice you forwarded",
+      "Kenapa saya tanya":"Why I'm asking",
+      "Lebih RM 50 dan melibatkan agensi kerajaan. Awak boleh naikkan had ini dalam tetapan.":"Over RM 50 and it involves a government agency. You can raise this limit in settings.",
+      "Teruskan ke MyJPJ — RM 96.00":"Continue to MyJPJ — RM 96.00",
+      "Tanya dulu":"Ask me first",
+      "Nanti dulu":"Not now",
+      "Sedang buat":"In progress",
+      "Saya uruskan sekarang":"I'm handling it now",
+      "Boleh tutup app. Saya ping bila siap.":"You can close the app. I'll ping you when it's done.",
+      "Road tax Myvi":"Myvi road tax",
+      "Borang dah siap":"Form is ready",
+      "Tinggal awak tekan bayar dalam MyJPJ":"You just tap pay inside MyJPJ",
+      "Sahkan insurans":"Verify insurance",
+      "Berjaya":"Confirmed",
+      "Bayar":"Pay",
+      "Resit LKJ-88213 disimpan":"Receipt LKJ-88213 saved",
+      "Hantar salinan ke Amir":"Send a copy to Amir",
+      "Menunggu":"Pending",
+      "Sementara tu":"While you're here",
+      "Cadangan":"Suggestion",
+      "Servis Myvi dah lewat 1,400 km":"Myvi service overdue by 1,400 km",
+      "3 bengkel dekat rumah, Sabtu masih ada slot":"3 workshops nearby, Saturday still open",
+      "Tempah Sabtu 10 pagi":"Book Saturday 10am",
+      "Perbualan":"Conversation",
+      "Suara & teks":"Voice & text",
+      "Eh, bil TNB dah masuk ke? Gaji lambat bulan ni":"Eh, has the TNB bill come in? Salary's late this month",
+      "Dah masuk semalam — RM 187.40, due 18 Sep. Saya belum bayar sebab awak cakap nak tunggu gaji.":"Came in yesterday — RM 187.40, due 18 Sep. I haven't paid it because you said to wait for payday.",
+      "Kalau nak, saya boleh minta TNB tukar tarikh bil ke 28hb. Sekali je buat, lepas tu senang tiap bulan.":"If you want, I can ask TNB to move your billing date to the 28th. One request, and every month after that is easier.",
+      "Boleh. Berapa lagi yang keluar sebelum 25hb?":"Okay. What else goes out before the 25th?",
+      "RM 546 — Unifi, Astro, tuisyen Alia, dan saman kalau nak diskaun. Lepas tu takde apa-apa sampai gaji.":"RM 546 — Unifi, Astro, Alia's tuition, and the saman if you want the discount. After that, nothing until payday.",
+      "Tolong tolak Astro dulu la":"Drop Astro first la",
+      "Astro RM 129.90 — saya jeda sampai lepas gaji. Nak saya semak sama ada pakej tu masih berbaloi? 3 bulan ni tengok 4 jam je.":"Astro RM 129.90 — pausing it until after payday. Want me to check whether that package is still worth it? 4 hours watched in 3 months.",
+      "Tekan & cakap…":"Hold & speak…",
+      "Sampai gaji":"To payday",
+      "17 hari · gaji masuk 25hb":"17 days · salary in on the 25th",
+      "Bil sebelum gaji":"Bills before payday",
+      "Dah dibayar":"Already paid",
+      "Belum dibayar":"Still to pay",
+      "Hari paling ketat: 18–20 Sep · baki bank belum tersambung, saya kira dari bil sahaja":"Tightest days: 18–20 Sep · no bank link yet, I count from bills only",
+      "Kalendar bil":"Bill calendar",
+      "Tuisyen Alia":"Alia's tuition",
+      "TNB · ditahan":"TNB · held",
+      "Saman · diskaun tamat":"Saman · discount ends",
+      "Gaji masuk":"Salary in",
+      "Cukai pintu MBPJ":"MBPJ assessment tax",
+      "Saya perasan":"Something I noticed",
+      "4 bil jatuh sebelum gaji. Kalau saya pindah TNB dan Unifi ke 28hb, bulan awak jadi lapang. Saya boleh mohon — ambil masa 5 minit.":"4 bills land before payday. If I move TNB and Unifi to the 28th, your month opens up. I can request it — takes 5 minutes.",
+      "Cuba pindah tarikh":"Try moving the dates",
+      "Peti dokumen":"Document vault",
+      "Setiap satu ada tarikh. Saya kira mundur.":"Every one has a date. I count down.",
+      "Dibayar 8 Sep · sah 12 bulan":"Paid 8 Sep · valid 12 months",
+      "Baru":"New",
+      "Insurans kenderaan":"Motor insurance",
+      "Etiqa · NCD 55%":"Etiqa · NCD 55%",
+      "34 hari":"34 days",
+      "Pasport Danish":"Danish's passport",
+      "Luput sebelum cuti sekolah Nov":"Expires before the Nov school holidays",
+      "Bahaya":"At risk",
+      "Setengah tahun kedua":"Second half-year",
+      "22 hari":"22 days",
+      "Lesen memandu Amir":"Amir's driving licence",
+      "Renew 5 tahun":"5-year renewal",
+      "7 bulan":"7 months",
+      "18 resit dikumpul · RM 1,180 pelepasan":"18 receipts collected · RM 1,180 relief",
+      "Pasport Danish perlu 3 minggu. Slot UTC Shah Alam ada Sabtu ini 9:20 pagi — kalendar awak kosong.":"Danish's passport takes 3 weeks. UTC Shah Alam has a slot this Saturday 9:20am — your calendar is free.",
+      "Ambil slot tu":"Take that slot",
+      "Amir nampak benda yang sama. Tak payah forward WhatsApp lagi.":"Amir sees the same list. No more forwarding on WhatsApp.",
+      "Hari ini":"Today",
+      "Isnin":"Monday",
+      "Ambil Danish · 4:00 ptg":"Pick up Danish · 4:00pm",
+      "Amir — saya dah masuk kalendar dia":"Amir — already in his calendar",
+      "Tandatangan borang PIBG":"Sign the PTA form",
+      "Saya dah isi, tinggal tandatangan":"I filled it in, just needs signing",
+      "Awak":"You",
+      "Beli barang dapur":"Groceries",
+      "11 barang · Lotus's murah RM 18 dari biasa":"11 items · Lotus's is RM 18 cheaper than usual",
+      "Sesiapa":"Anyone",
+      "Mak di Ipoh":"Mak in Ipoh",
+      "Jauh":"Remote",
+      "Temujanji klinik · 14 Sep, 10:30 pg":"Clinic appointment · 14 Sep, 10:30am",
+      "Saya ingatkan Mak pagi tu, dan beritahu awak dia dah sampai":"I'll remind Mak that morning, and tell you when she arrives",
+      "Bil TNB rumah Mak":"TNB bill for Mak's house",
+      "RM 62.30 · awak bayar tiap bulan":"RM 62.30 · you pay it every month",
+      "Auto":"Auto",
+      "Balik kampung Raya":"Raya trip to the kampung",
+      "Tiket bas Danish & Alia — harga naik minggu depan":"Bus tickets for Danish & Alia — prices rise next week",
+      "Tengok":"Review",
+      "Minta Kerani uruskan sesuatu":"Ask Kerani to handle something",
+      "Apa saya boleh buat sendiri":"What I may do on my own",
+      "Awak yang tetapkan. Boleh tarik balik bila-bila.":"You set this. Revoke it anytime.",
+      "Bayar bil bawah RM 250":"Pay bills under RM 250",
+      "Utiliti & telco yang dah biasa sahaja":"Familiar utilities & telcos only",
+      "Had bulanan":"Monthly limit",
+      "RM 800 · guna RM 283 bulan ni":"RM 800 · RM 283 used this month",
+      "Isi borang kerajaan":"Fill in government forms",
+      "Saya siapkan, awak hantar":"I prepare, you submit",
+      "Telefon & tempah bagi pihak saya":"Call & book on my behalf",
+      "Bengkel, klinik, sekolah":"Workshops, clinics, school",
+      "Balas mesej sesiapa":"Reply to anyone's messages",
+      "Tak pernah. Saya draf sahaja.":"Never. I only draft.",
+      "Waktu senyap":"Quiet hours",
+      "10:30 mlm – 6:30 pg · kecuali kecemasan":"10:30pm – 6:30am · emergencies excepted",
+      "Jangan usik":"Off limits",
+      "Grup keluarga, foto, mesej kerja":"Family groups, photos, work messages",
+      "3 tempat":"3 places",
+      "Tengok apa saya dah buat":"See what I've done",
+      "Setiap tindakan, dengan resit. Boleh batalkan 24 jam.":"Every action, with a receipt. Reversible for 24 hours.",
+      "Bayar road tax RM 96.00":"Paid road tax RM 96.00",
+      "8 Sep 8:16 pg · awak luluskan · MyJPJ LKJ-88213":"8 Sep 8:16am · you approved · MyJPJ LKJ-88213",
+      "Resit":"Receipt",
+      "Bayar TNB RM 187.40":"Paid TNB RM 187.40",
+      "7 Sep 9:02 mlm · dalam had · boleh batal":"7 Sep 9:02pm · within limit · reversible",
+      "Batal":"Undo",
+      "Baca 14 e-mel, ambil 3":"Read 14 e-mails, kept 3",
+      "7 Sep · TNB, sekolah, Etiqa · yang lain diabaikan":"7 Sep · TNB, school, Etiqa · the rest ignored",
+      "Baca":"Read",
+      "Draf e-mel ke guru kelas":"Drafted e-mail to the class teacher",
+      "6 Sep · tunggu awak hantar":"6 Sep · waiting for you to send",
+      "Draf":"Draft",
+      "Jeda langganan Astro":"Paused Astro subscription",
+      "6 Sep · awak minta dalam perbualan":"6 Sep · you asked in conversation",
+      "Bulan ini":"This month",
+      "Tindakan diambil":"Actions taken",
+      "Ditanya dulu":"Asked first",
+      "Dibatalkan awak":"Reversed by you",
+      "Denda lewat dielak":"Late penalties avoided",
+      "Skrin kunci · nada & masa":"Lock screen · tone & timing",
+      "Bila saya ganggu":"When I interrupt",
+      "Tiga tahap sahaja. Selebihnya tunggu dalam app.":"Three tiers only. Everything else waits in the app.",
+      "Kerani · sekarang":"Kerani · now",
+      "Perlu awak":"Needs you",
+      "Diskaun saman tamat esok.":"Saman discount ends tomorrow.",
+      "RM 150 kalau bayar hari ni, RM 300 lepas tu. Luluskan?":"RM 150 if you pay today, RM 300 after that. Approve?",
+      "Kerani · 7:02 pg":"Kerani · 7:02am",
+      "Ringkasan":"Summary",
+      "Pagi Farah. 2 benda tunggu awak, saya dah settle 3. Tiada yang mendesak sampai Khamis.":"Morning Farah. 2 things waiting on you, I settled 3. Nothing urgent until Thursday.",
+      "Kerani · semalam":"Kerani · yesterday",
+      "Dah siap":"Done",
+      "Road tax Myvi dah renew. Resit dalam peti dokumen, salinan dah hantar ke Amir.":"Myvi road tax renewed. Receipt in the vault, copy sent to Amir.",
+      "Peraturan":"The rule",
+      "Satu ringkasan pagi. Ganggu hanya bila ada duit atau tarikh mati terlibat. Tak pernah dua kali untuk benda sama.":"One morning summary. Interrupt only when money or a deadline is involved. Never twice for the same thing.",
+      "Balik ke Hari Ini":"Back to Today",
+      "September":"September",
+      "Unifi · auto":"Unifi · auto",
+      "PTPTN · auto":"PTPTN · auto",
+      "Apr 2027":"Apr 2027",
+      "Bengkel Hasnan · 2.1 km":"Bengkel Hasnan · 2.1 km",
+      "Perodua SC Kota D. · 4.8 km":"Perodua SC Kota D. · 4.8 km",
+      "Auto Klinik PJ · 6.0 km":"Auto Klinik PJ · 6.0 km",
+      "SK Kota Damansara":"SK Kota Damansara",
+      "Mak · Ipoh":"Mak · Ipoh",
+      "Myvi 2019 · WXX 1234":"Myvi 2019 · WXX 1234"
+    },
+    "chrome": {
+      "8:14 PG":"8:14 AM",
+      "Duit":"Money",
+      "Tanya":"Ask",
+      "Rumah":"Home"
+    }
+  };
+
+  // Collect text nodes for translation
+  var textNodes = [];
+  [[document.getElementById("stage"), "stage"],
+   [document.getElementById("tabbar"), "chrome"],
+   [document.querySelector(".statusbar"), "chrome"]].forEach(function(pair){
+    if(!pair[0]) return;
+    var w = document.createTreeWalker(pair[0], NodeFilter.SHOW_TEXT, null);
+    var n;
+    while((n = w.nextNode())){
+      if(n.nodeValue.trim()) textNodes.push({node:n, ms:n.nodeValue, dict:pair[1]});
+    }
+  });
+
+  var lang = "ms";
+  function setLang(l){
+    lang = l;
+    textNodes.forEach(function(t){
+      var raw = t.ms;
+      if(l === "ms"){ t.node.nodeValue = raw; return; }
+      var key = raw.trim(), en = DICT[t.dict][key];
+      if(!en){ t.node.nodeValue = raw; return; }
+      var i = raw.indexOf(key);
+      t.node.nodeValue = raw.slice(0, i) + en + raw.slice(i + key.length);
+    });
+    document.querySelectorAll(".langbtn").forEach(function(b){
+      b.setAttribute("aria-pressed", b.dataset.lang === l ? "true" : "false");
+    });
+    try{ localStorage.setItem("kerani-lang", l); }catch(e){}
+  }
+
+  function show(id){
+    if(!screens[id]) return;
+    order.forEach(function(k){ screens[k].hidden = (k !== id); });
+    var t = screens[id].dataset.tab;
+    tabbar.hidden = (t === "none");
+    Object.keys(tabs).forEach(function(k){ tabs[k].setAttribute("aria-current", k === t ? "true" : "false"); });
+    screens[id].scrollTop = 0;
+    current = id;
+  }
+
+  // Event delegation
+  document.addEventListener("click", function(e){
+    var lg = e.target.closest("[data-lang]");
+    if(lg){ setLang(lg.dataset.lang); return; }
+    var go = e.target.closest("[data-goto]");
+    if(go){ show(go.dataset.goto); return; }
+    var tog = e.target.closest('[data-toggle="self"]');
+    if(tog){ tog.dataset.on = tog.dataset.on === "1" ? "0" : "1"; return; }
+    var single = e.target.closest('[data-toggle="single"]');
+    if(single){
+      single.parentNode.querySelectorAll('[data-toggle="single"]').forEach(function(o){ o.dataset.on = "0"; });
+      single.dataset.on = "1";
+    }
+  });
+
+  // Arrow keys for desktop walkthrough
+  document.addEventListener("keydown", function(e){
+    if(e.target.closest("input,textarea")) return;
+    if(e.key === "ArrowRight" || e.key === "ArrowLeft"){
+      var i = order.indexOf(current) + (e.key === "ArrowRight" ? 1 : -1);
+      if(i >= 0 && i < order.length) show(order[i]);
+    }
+  });
+
+  // Init
+  document.querySelector('#language [data-toggle="single"]').dataset.on = "1";
+  var saved = "ms";
+  try{ saved = localStorage.getItem("kerani-lang") || "ms"; }catch(e){}
+  setLang(saved === "en" ? "en" : "ms");
+  show("welcome");
+})();
+</script>
+</body>
+</html>
